@@ -9,6 +9,7 @@ let questionSchema = new mongoose.Schema({
     categories:String,
     date: { type: Date, default: Date.now },
     comments:[{type : mongoose.Types.ObjectId , ref: "Comment"}],
+    user_id:[{type : mongoose.Types.ObjectId , ref: "User"}]
     // categories: [{type : mongoose.Types.ObjectId , ref: "Category"}]
 })
 

@@ -9,18 +9,17 @@ import Category from './db/models/category.js';
 import cors from "cors";
 import dotenv from 'dotenv'
 import bcrypt from "bcrypt";
+import 'dotenv/config';
 // import Category from './db/models/category.js';
 
 
 const app = express();
-const port = 4000;
+const port = process.env.PORT;
 // const hostname = process.env.REMOTE_CLIENT_APP;
 
 app.use(bodyParser.json());
 // app.use(cors({origin: process.env.REMOTE_CLIENT_APP, credentials: true}))
 app.use(cors())
-// app.use(routes);
-app.use(express.json());
 const database = new Database();
 
 Database.connect();
@@ -129,7 +128,7 @@ app.get('/logout',auth,function(req,res){
 });
 
 app.get('/users',function(req,res){
-                        User.find({})
+                        User.find({}).populate('question_id').populate('comments')
                         .then((doc)=>{res.send(doc)})
                         .catch(err => {console.log(err);      
                             })
@@ -148,6 +147,7 @@ app.post('/questions',function(req,res){
     newQuestion.save((err,doc)=>{
         if(err) {console.log(err);
             return res.status(400).json({ success : false});}
+            Question.updateOne({"_id" : doc.question_id},{$push : {user_id : doc._id}})
         res.status(200).json({
             succes:true,
             message : "Question added with success",
@@ -157,14 +157,14 @@ app.post('/questions',function(req,res){
 })
 
 app.get('/questions', (req,res) => { 
-                        Question.find({}).populate("comments")
+                        Question.find({}).populate("comments").populate("user_id")
                         .then((doc)=>{res.send(doc)})
                         .catch(err => {console.log(err);      
                             })
                     })
 
 app.get('/question/:id',(req,res) => { 
-                        Question.findById((req.params.id),(req.body)).populate("comments")
+                        Question.findById((req.params.id),(req.body)).populate("comments").populate("user_id")
                         .then((doc)=>{res.send(doc)})
                         .catch(err => {console.log(err);      
                             })
@@ -198,7 +198,7 @@ app.post('/comments',(req,res)=>{
     })
 })
 app.get('/comments',(req,res)=>{
-    Comment.find({}).populate('question_id')
+    Comment.find({}).populate('question_id').populate("user_id")
     .then((doc)=>{res.send(doc)})
     .catch(err => {console.log(err);      
                             })
@@ -219,4 +219,6 @@ app.post('/categories',function(req,res){
      })
 })
 
-app.listen(process.env.PORT || 4000)
+app.listen(port , ()=> {
+    console.log('Server running at http:127.0.0.1:' + port)
+})
